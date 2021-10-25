@@ -3,8 +3,8 @@
 #                                                                                                                                      #
 # Author(s): Rishabh Kumar                                                                                                             #
 # Creation Date: 19/10/2021                                                                                                            #
-# Description: hich products will an Instacart consumer purchase again?                                                                #
-# Weblink: https://www.kaggle.com/c/instacart-market-basket-analysis                                                                   #
+# Description: Which products do the consumers purchase together?                                                                      #
+# Weblink: https://www.kaggle.com/rashikrahmanpritom/groceries-dataset-for-market-basket-analysismba                                   #
 #                                                                                                                                      #
 # Other important weblinks are:                                                                                                        #                                                                                                                                    #
 # (i) https://www.kaggle.com/foolwuilin/market-basket-analysis-with-apriori                                                            #                                                                                                                                   #
@@ -17,7 +17,7 @@
 #                                                                                                                                      #
 #                                                             *** EDIT LOG ***                                                         #
 # Last Edit Date: xx/xx/20xx                                                                                                           #
-# Last Edit by: Rishabh Kumar                                                                                                          #
+# Last Edit by: xxx                                                                                                                    #
 #                                                                                                                                      #
 #        EDIT ID     |     EDITED BY      |     EDIT DATE     |      EDIT DESCRIPTION                                                  #  
 #        <xxx001>          <xxx>                xx/xx/20xx           <To be filed>                                                     # 
