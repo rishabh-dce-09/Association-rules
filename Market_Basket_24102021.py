@@ -51,6 +51,8 @@
 
 import pandas as pd
 import numpy as np
+import random
+import textwrap
 
 from datetime import date
 import time as time
@@ -58,6 +60,8 @@ import time as time
 import matplotlib.pyplot as plt
 from matplotlib.pyplot import figure
 import seaborn as sns
+
+from wordcloud import WordCloud
 
 from mlxtend.frequent_patterns import apriori, association_rules
 # from efficient_apriori import apriori
@@ -80,6 +84,15 @@ read_data = 'YES'
 output_dataset = 'NO'
 
 article_desc_col = 'itemDescription'
+
+# Top N items bought [bar chart]
+item_num = 10
+
+# Number of items to be displayed for the word cloud
+pop_items = 25
+
+# Analysis of Top Consequents (Items) by Lift of the Top Antecedents (Items) by Support
+max_top_consequents = 10
 
 today = date.today()
 date_stamp = today.strftime('%d_%m_%Y') # Format: dd_mm_yyyy
@@ -144,25 +157,49 @@ df_main[article_desc_col].nunique()
 # Create a data column
 # df_main['date'] = pd.to_datetime(df_main['year']*10000+df_main['month']*100+df_main['day'],format='%Y%m%d')
 
-# ------ Top N items bought ------
-item_num = 10
+# ------ Top N items bought [bar chart] ------
+# item_num = 10
+
 df_item = df_main.groupby(by = article_desc_col)['Member_number'].agg(['count']).sort_values(['count'], ascending = False).reset_index()
 print(f'\nTop {item_num} Items are as follows: \n{df_item.head(item_num)}') # Check
 
 # plt.style.use('default')
 figure(figsize=fig_size, dpi=fig_dpi)
 
-plt.bar(df_item[article_desc_col][:item_num],df_item['count'][:item_num], color = 'darkgreen')
+plt.bar([textwrap.fill(e,7) for e in df_item[article_desc_col][:item_num]],df_item['count'][:item_num], color = 'green')
 plt.title(f'Top {item_num} items by number of purchases')
 plt.xlabel('Item Description')
 plt.ylabel('Number of itmes')
-plt.xticks(rotation=90)
+# plt.xticks(rotation=90)
 plt.show()
 
 df_year = df_main.groupby(['year'])['Member_number'].agg(['count'])
 print(f'\nNumber of items bought by year is as followss: \n{df_year.head(10)}') # Check
 
 # plt.style.use('dark_background')
+
+# ------ Top N items bought [word cloud] ------
+
+# pop_items = 25
+
+def white_color_func(word, font_size, position, orientation, random_state=None,**kwargs):
+    return "hsl(0, 0%%, %d%%)" % random.randint(60, 100)
+
+replace_dict =  {'/':'_', ' ': '_', '-': '_'}
+print(f'\nCreating Word Cloud for the Top {pop_items} frequently bought items\n')
+
+df_main[f'{article_desc_col}_new'] = df[article_desc_col].replace(replace_dict, regex = True)
+text = ' '.join(item for item in df_main[f'{article_desc_col}_new'].astype(str))
+
+figure(figsize=fig_size, dpi=fig_dpi)
+
+wordcloud = WordCloud(background_color = 'black', width = 3000, height = 2000, collocations = False, max_words = pop_items).generate(text)
+wordcloud.recolor(color_func = white_color_func)
+plt.axis('off')
+plt.title(f'Top {pop_items} items by number of purchases', fontsize = 25, color = 'cyan', fontweight = 'bold', pad = 15)
+plt.imshow(wordcloud, interpolation="bilinear")
+plt.show()
+
 
 # ------ Trend of items bought ------
 df_month_year = df_main.groupby(by=['year','month'], as_index = False)['Member_number'].agg(['count']).sort_values(['year','month'], ascending = True).reset_index()
@@ -230,7 +267,7 @@ df_basket_sets = df_basket.applymap(encode_units)
 
 start_time = time.time()
 
-frequent_itemsets = apriori(df_basket_sets, min_support = 0.01, use_colnames = True)
+frequent_itemsets = apriori(df_basket_sets, min_support = 0.03, use_colnames = True)
 frequent_itemsets['length'] = frequent_itemsets['itemsets'].apply(lambda x:len(x))
 
 # frequent_itemsets_filtered = frequent_itemsets[frequent_itemsets['support'] >= 0.1]
@@ -241,6 +278,8 @@ print(f'Time to run apriori algorithm: {round(time_to_run,2)} second(s)')
 df_rules = association_rules(frequent_itemsets, metric = 'lift', min_threshold = 1)
 df_rules.sort_values('lift', ascending = False, inplace = True)
 
+df_rules['ante_length'] = df_rules['antecedents'].apply(lambda x: len(x))
+df_rules['conse_length'] = df_rules['consequents'].apply(lambda x: len(x))
 
 # ------ Convert "Frozen Sets" to tuples ------
 
@@ -261,6 +300,54 @@ print(f'\nTop {top_rules} rules are: \n',df_rules.head(top_rules))
 #                                                                                                                                      #
 ########################################################################################################################################
 
+# ------ Analysis of Top Antecedents (Items) by Support ------
+
+# list_items = df_item[article_desc_col][:item_num].tolist()
+
+list_items_raw = df_item[[article_desc_col]].values[:item_num].tolist()
+list_items = [item for sublist in list_items_raw for item in sublist]
+
+df_rules_few_list = df_rules[df_rules['ante_length'] == 1 & df_rules['antecedents'].isin(list_items)].sort_values('antecedent support', ascending = False).drop_duplicates(['antecedents'])
+
+print(f'\nTop {item_num} items by support in the transactional data are:\n', list_items)
+
+figure(figsize=fig_size, dpi=fig_dpi)
+
+plt.bar([textwrap.fill(e,7) for e in df_rules_few_list['antecedents'][:item_num]], df_rules_few_list['antecedent support'][:item_num], color = 'cyan')
+plt.title(f'Top {item_num} items (antecedents) by support')
+plt.xlabel('Item Dessription (Antecedents)')
+plt.ylabel('Support')
+plt.show()
+
+print(f'Analysing the top products (by lift) bought with these top {item_num} products\n')
+
+# ------ Analysis of Top Consequents (Items) by Lift of the Top Antecedents (Items) by Support ------
+
+# max_top_consequents = 10
+
+for select_item in list_items:
+    rules_sel = df_rules[df_rules['antecedents'].apply(lambda x: select_item in x)]
+    rules_sel.sort_values('confidence', ascending = False)
+    
+    rules_support = rules_sel['support'] >= rules_sel['support'].quantile(q = 0.5)
+    rules_confi = rules_sel['confidence'] >= rules_sel['confidence'].quantile(q = 0.5)
+    rules_len = rules_sel['ante_length'] == 1
+    
+    rules_best = rules_sel.loc[rules_support & rules_confi & rules_len]
+    
+    rules_to_dis = min(rules_best['antecedents'].count(), max_top_consequents)
+    df_rules_bar = rules_best.sort_values(['lift'], ascending = False)
+
+    print(f'\nTop {rules_to_dis} association rules (by lift) for {select_item} are as follows:\n', df_rules_bar.head(rules_to_dis))
+    
+    figure(figsize=fig_size, dpi=fig_dpi)
+    
+    plt.bar([textwrap.fill(e,7) for e in df_rules_bar['consequents'][:rules_to_dis]], df_rules_bar['lift'][:rules_to_dis], color = 'lightgreen')
+    plt.title(f'Top {rules_to_dis} associations (by lift) for {select_item}')
+    plt.xlabel('Item Dessription (Consequent)')
+    plt.ylabel('Lift')
+    plt.show()
+
 
 # ------ Quick look at the distribution of the product combination ------
 
@@ -274,13 +361,14 @@ plt.show()
 
 # ------ Analysis of Selected Item ------
 
-select_item = 'whole milk'
+# select_item = 'whole milk'
+select_item = 'other vegetables'
 
 rules_sel = df_rules[df_rules['antecedents'].apply(lambda x: select_item in x)]
 rules_sel.sort_values('confidence', ascending=False)
 
-rules_support = rules_sel['support'] >= rules_sel['support'].quantile(q = 0.95)
-rules_confi = rules_sel['confidence'] >= rules_sel['confidence'].quantile(q = 0.95)
+rules_support = rules_sel['support'] >= rules_sel['support'].quantile(q = 0.9)
+rules_confi = rules_sel['confidence'] >= rules_sel['confidence'].quantile(q = 0.9)
 rules_lift = rules_sel['lift'] > 1
 
 rules_best = rules_sel[rules_support & rules_confi & rules_lift]
