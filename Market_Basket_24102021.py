@@ -97,6 +97,7 @@ max_top_consequents = 10
 today = date.today()
 date_stamp = today.strftime('%d_%m_%Y') # Format: dd_mm_yyyy
 
+# Chart Properties
 fig_size = (9, 6)
 fig_dpi = 200
 
@@ -105,6 +106,12 @@ fig_dpi = 200
 # plt.style.use('classic')
 # plt.style.use('seaborn-dark-palette')
 plt.style.use('dark_background')
+
+title_fontweight = 'bold'
+title_fontsize = 20
+
+axes_title_fontsize = title_fontsize/1.25
+label_fontsize = title_fontsize/1.5
 
 # ------ Read the data ------
 
@@ -166,10 +173,13 @@ print(f'\nTop {item_num} Items are as follows: \n{df_item.head(item_num)}') # Ch
 # plt.style.use('default')
 figure(figsize=fig_size, dpi=fig_dpi)
 
-plt.bar([textwrap.fill(e,7) for e in df_item[article_desc_col][:item_num]],df_item['count'][:item_num], color = 'green')
-plt.title(f'Top {item_num} items by number of purchases')
-plt.xlabel('Item Description')
-plt.ylabel('Number of itmes')
+bar_chart = plt.bar([textwrap.fill(e,6) for e in df_item[article_desc_col][:item_num]],df_item['count'][:item_num], color = 'green')
+plt.title(f'Top {item_num} items by number of purchases', fontsize = title_fontsize, fontweight = title_fontweight)
+plt.xlabel('Item Description', fontsize=label_fontsize)
+plt.ylabel('Number of itmes', fontsize=label_fontsize)
+plt.yticks(fontsize=label_fontsize)
+plt.xticks(fontsize=label_fontsize)
+plt.bar_label(bar_chart, fmt = '%.f',size=label_fontsize, label_type = 'edge', color = 'white')
 # plt.xticks(rotation=90)
 plt.show()
 
@@ -196,7 +206,7 @@ figure(figsize=fig_size, dpi=fig_dpi)
 wordcloud = WordCloud(background_color = 'black', width = 3000, height = 2000, collocations = False, max_words = pop_items).generate(text)
 wordcloud.recolor(color_func = white_color_func)
 plt.axis('off')
-plt.title(f'Top {pop_items} items by number of purchases', fontsize = 25, color = 'cyan', fontweight = 'bold', pad = 15)
+plt.title(f'Top {pop_items} items by number of purchases', fontsize = title_fontsize, color = 'cyan', fontweight = title_fontweight, pad = 15)
 plt.imshow(wordcloud, interpolation="bilinear")
 plt.show()
 
@@ -210,9 +220,11 @@ df_month_year['year-month'] = df_month_year['year'].astype(str) + "_" + df_month
 figure(figsize=fig_size, dpi=fig_dpi)
 
 plt.plot(df_month_year['year-month'],df_month_year['count'], color='red', marker='o')
-plt.title('Trend of number of items bought')
-plt.xlabel('Month-Year')
-plt.ylabel('Number of Items')
+plt.title('Trend of number of items bought', fontsize = title_fontsize, fontweight = title_fontweight)
+plt.xlabel('Month-Year', fontsize=label_fontsize)
+plt.ylabel('Number of Items', fontsize=label_fontsize)
+plt.yticks(fontsize=label_fontsize)
+plt.xticks(fontsize=label_fontsize)
 plt.xticks(rotation=90)
 # plt.grid(True)
 plt.show()
@@ -231,10 +243,12 @@ figure(figsize=fig_size, dpi=fig_dpi)
 for item in list_items:
     plt.plot(df_items_mon_year[df_items_mon_year[article_desc_col] == item]['year-month'], df_items_mon_year[df_items_mon_year[article_desc_col] == item]['count'], label=item) # , marker='o' , color='skyblue')
 
-plt.title(f'Trend of Top {top_items} items bought')
-plt.xlabel('Month-Year')
-plt.ylabel('Number of Items')
+plt.title(f'Trend of Top {top_items} items bought', fontsize = title_fontsize, fontweight = title_fontweight)
+plt.xlabel('Month-Year', fontsize=label_fontsize)
+plt.ylabel('Number of Items', fontsize=label_fontsize)
 plt.xticks(rotation=90)
+plt.yticks(fontsize=label_fontsize)
+plt.xticks(fontsize=label_fontsize)
 plt.legend(loc='upper left',ncol=2, fancybox=True, shadow=True)
 plt.show()
 
@@ -267,7 +281,7 @@ df_basket_sets = df_basket.applymap(encode_units)
 
 start_time = time.time()
 
-frequent_itemsets = apriori(df_basket_sets, min_support = 0.03, use_colnames = True)
+frequent_itemsets = apriori(df_basket_sets, min_support = 0.05, use_colnames = True)
 frequent_itemsets['length'] = frequent_itemsets['itemsets'].apply(lambda x:len(x))
 
 # frequent_itemsets_filtered = frequent_itemsets[frequent_itemsets['support'] >= 0.1]
@@ -313,10 +327,13 @@ print(f'\nTop {item_num} items by support in the transactional data are:\n', lis
 
 figure(figsize=fig_size, dpi=fig_dpi)
 
-plt.bar([textwrap.fill(e,7) for e in df_rules_few_list['antecedents'][:item_num]], df_rules_few_list['antecedent support'][:item_num], color = 'cyan')
-plt.title(f'Top {item_num} items (antecedents) by support')
-plt.xlabel('Item Dessription (Antecedents)')
-plt.ylabel('Support')
+bar_chart = plt.bar([textwrap.fill(e,6) for e in df_rules_few_list['antecedents'][:item_num]], df_rules_few_list['antecedent support'][:item_num], color = 'cyan')
+plt.title(f'Top {item_num} items (antecedents) by support', fontsize = title_fontsize, fontweight = title_fontweight)
+plt.xlabel('Item Dessription (Antecedents)', fontsize=label_fontsize)
+plt.ylabel('Support', fontsize=label_fontsize)
+plt.yticks(fontsize=label_fontsize)
+plt.xticks(fontsize=label_fontsize)
+plt.bar_label(bar_chart, fmt = '%.2f',size=label_fontsize, label_type = 'edge', color = 'white')
 plt.show()
 
 print(f'Analysing the top products (by lift) bought with these top {item_num} products\n')
@@ -342,10 +359,13 @@ for select_item in list_items:
     
     figure(figsize=fig_size, dpi=fig_dpi)
     
-    plt.bar([textwrap.fill(e,7) for e in df_rules_bar['consequents'][:rules_to_dis]], df_rules_bar['lift'][:rules_to_dis], color = 'lightgreen')
-    plt.title(f'Top {rules_to_dis} associations (by lift) for {select_item}')
-    plt.xlabel('Item Dessription (Consequent)')
-    plt.ylabel('Lift')
+    bar_chart = plt.bar([textwrap.fill(e,7) for e in df_rules_bar['consequents'][:rules_to_dis]], df_rules_bar['lift'][:rules_to_dis], color = 'lightgreen')
+    plt.title(f'Top {rules_to_dis} associations (by lift) for {select_item}', fontsize = title_fontsize, fontweight = title_fontweight)
+    plt.xlabel('Item Dessription (Consequent)', fontsize=label_fontsize)
+    plt.ylabel('Lift', fontsize=label_fontsize)
+    plt.yticks(fontsize=label_fontsize)
+    plt.xticks(fontsize=label_fontsize)
+    plt.bar_label(bar_chart, fmt = '%.2f',size=label_fontsize, label_type = 'edge', color = 'white')
     plt.show()
 
 
@@ -354,9 +374,12 @@ for select_item in list_items:
 sns.set_context("notebook")
 
 sns.relplot(x='antecedent support', y='consequent support', data=df_rules, size='lift', hue='confidence', height=6, aspect=1.5)
-plt.title("Antecedent Support v/s. Consequent Support", fontsize=16, y=1.02)
-plt.xlabel('Antecedent Support', fontsize=13)
-plt.ylabel('Consequent Support', fontsize=13)
+plt.title("Antecedent Support v/s. Consequent Support", fontsize=title_fontsize, fontweight = title_fontweight, y=1.02)
+plt.xlabel('Antecedent Support', fontsize=label_fontsize)
+plt.ylabel('Consequent Support', fontsize=label_fontsize)
+plt.yticks(fontsize=label_fontsize)
+plt.xticks(fontsize=label_fontsize)
+# plt.legend(loc=6, prop={'size': 12})
 plt.show()
 
 # ------ Analysis of Selected Item ------
@@ -367,8 +390,8 @@ select_item = 'other vegetables'
 rules_sel = df_rules[df_rules['antecedents'].apply(lambda x: select_item in x)]
 rules_sel.sort_values('confidence', ascending=False)
 
-rules_support = rules_sel['support'] >= rules_sel['support'].quantile(q = 0.9)
-rules_confi = rules_sel['confidence'] >= rules_sel['confidence'].quantile(q = 0.9)
+rules_support = rules_sel['support'] >= rules_sel['support'].quantile(q = 0.75)
+rules_confi = rules_sel['confidence'] >= rules_sel['confidence'].quantile(q = 0.75)
 rules_lift = rules_sel['lift'] > 1
 
 rules_best = rules_sel[rules_support & rules_confi & rules_lift]
